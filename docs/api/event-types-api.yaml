@@ -1,0 +1,812 @@
+openapi: 3.0.0
+info:
+  title: Event Types API
+  description: API endpoints for managing event types - different types of meetings that can be booked on a user's calendar
+  version: 1.0.0
+
+servers:
+  - url: https://api.yourapp.com
+    description: Production server
+  - url: http://localhost:3000
+    description: Development server
+
+paths:
+  /api/event-types:
+    get:
+      summary: Get all event types for the authenticated user
+      operationId: getEventTypes
+      tags:
+        - Event Types
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: enabled
+          in: query
+          required: false
+          schema:
+            type: boolean
+          description: Filter by enabled/disabled status
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of event types to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of event types to skip for pagination
+      responses:
+        '200':
+          description: Event types retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  eventTypes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventType'
+                  total:
+                    type: integer
+                    description: Total number of event types
+                    example: 5
+                  limit:
+                    type: integer
+                    example: 20
+                  offset:
+                    type: integer
+                    example: 0
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create a new event type
+      operationId: createEventType
+      tags:
+        - Event Types
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventTypeRequest'
+      responses:
+        '201':
+          description: Event type created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/event-types/{id}:
+    get:
+      summary: Get a specific event type by ID
+      operationId: getEventTypeById
+      tags:
+        - Event Types
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Event type ID
+      responses:
+        '200':
+          description: Event type retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Event type not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update an event type
+      operationId: updateEventType
+      tags:
+        - Event Types
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Event type ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventTypeRequest'
+      responses:
+        '200':
+          description: Event type updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Event type not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete an event type
+      operationId: deleteEventType
+      tags:
+        - Event Types
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Event type ID
+      responses:
+        '200':
+          description: Event type deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Event type deleted successfully"
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Event type not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - cannot delete event type with existing bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/event-types/{id}/duplicate:
+    post:
+      summary: Duplicate an event type
+      operationId: duplicateEventType
+      tags:
+        - Event Types
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Event type ID to duplicate
+      responses:
+        '201':
+          description: Event type duplicated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Event type not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/event-types/{id}/toggle:
+    patch:
+      summary: Toggle event type enabled/disabled status
+      operationId: toggleEventType
+      tags:
+        - Event Types
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Event type ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                  description: Whether the event type should be enabled
+                  example: true
+              required:
+                - enabled
+      responses:
+        '200':
+          description: Event type status toggled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Event type not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CreateEventTypeRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Event type title
+          example: "Quick Chat"
+          minLength: 1
+          maxLength: 100
+        url:
+          type: string
+          description: URL slug for the event booking page
+          example: "quick-chat"
+          minLength: 1
+          maxLength: 100
+          pattern: '^[a-z0-9-]+$'
+        description:
+          type: string
+          description: Event type description (supports markdown)
+          example: "A quick video meeting to discuss your needs."
+          maxLength: 2000
+        duration:
+          type: integer
+          description: Event duration in minutes
+          example: 15
+          minimum: 5
+          maximum: 480
+        location:
+          type: string
+          description: Meeting location type
+          example: "Google Meet"
+          enum: [Google Meet, Zoom, Microsoft Teams, Phone Call, In Person, Custom]
+        customLocation:
+          type: string
+          description: Custom location details (if location is "Custom")
+          example: "123 Main St, Office 5"
+          maxLength: 200
+        enabled:
+          type: boolean
+          description: Whether this event type is active
+          example: true
+          default: true
+      required:
+        - title
+        - url
+        - duration
+
+    UpdateEventTypeRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Event type title
+          example: "30 Minute Meeting"
+          minLength: 1
+          maxLength: 100
+        url:
+          type: string
+          description: URL slug for the event booking page
+          example: "30min"
+          minLength: 1
+          maxLength: 100
+          pattern: '^[a-z0-9-]+$'
+        description:
+          type: string
+          description: Event type description (supports markdown)
+          example: "A comprehensive discussion about your project."
+          maxLength: 2000
+        duration:
+          type: integer
+          description: Event duration in minutes
+          example: 30
+          minimum: 5
+          maximum: 480
+        enabled:
+          type: boolean
+          description: Whether this event type is active
+          example: true
+        allowMultipleDurations:
+          type: boolean
+          description: Allow invitees to choose from multiple duration options
+          example: false
+          default: false
+        multipleDurationOptions:
+          type: array
+          description: Available duration options if allowMultipleDurations is true
+          items:
+            type: integer
+            minimum: 5
+            maximum: 480
+          example: [15, 30, 45, 60]
+        location:
+          type: string
+          description: Meeting location type
+          example: "Google Meet"
+          enum: [Google Meet, Zoom, Microsoft Teams, Phone Call, In Person, Custom]
+        customLocation:
+          type: string
+          description: Custom location details (if location is "Custom")
+          example: "123 Main St, Office 5"
+          maxLength: 200
+        beforeEventBuffer:
+          type: integer
+          description: Buffer time before event in minutes
+          example: 0
+          minimum: 0
+          maximum: 120
+          default: 0
+        afterEventBuffer:
+          type: integer
+          description: Buffer time after event in minutes
+          example: 0
+          minimum: 0
+          maximum: 120
+          default: 0
+        minimumNotice:
+          type: integer
+          description: Minimum notice required before booking in minutes
+          example: 120
+          minimum: 0
+          default: 120
+        timeSlotInterval:
+          type: integer
+          description: Time slot interval in minutes (null means use event duration)
+          example: 30
+          minimum: 5
+          maximum: 120
+          nullable: true
+        limitBookingFrequency:
+          type: boolean
+          description: Limit how often this event can be booked
+          example: false
+          default: false
+        bookingFrequencyLimit:
+          type: object
+          description: Booking frequency limit settings (if limitBookingFrequency is true)
+          properties:
+            count:
+              type: integer
+              description: Maximum number of bookings allowed
+              example: 2
+              minimum: 1
+            period:
+              type: string
+              description: Time period for the limit
+              enum: [day, week, month]
+              example: "week"
+        onlyFirstSlotPerDay:
+          type: boolean
+          description: Only show the first available slot each day
+          example: false
+          default: false
+        limitTotalDuration:
+          type: boolean
+          description: Limit total booking duration
+          example: false
+          default: false
+        totalDurationLimit:
+          type: object
+          description: Total duration limit settings (if limitTotalDuration is true)
+          properties:
+            duration:
+              type: integer
+              description: Maximum total duration in minutes
+              example: 240
+              minimum: 30
+            period:
+              type: string
+              description: Time period for the limit
+              enum: [day, week, month]
+              example: "day"
+        limitUpcomingBookings:
+          type: boolean
+          description: Limit number of upcoming bookings per booker
+          example: false
+          default: false
+        upcomingBookingsLimit:
+          type: integer
+          description: Maximum upcoming bookings per booker (if limitUpcomingBookings is true)
+          example: 1
+          minimum: 1
+        limitFutureBookings:
+          type: boolean
+          description: Limit how far in the future bookings can be made
+          example: false
+          default: false
+        futureBookingsLimit:
+          type: integer
+          description: Maximum days in the future for bookings (if limitFutureBookings is true)
+          example: 60
+          minimum: 1
+          maximum: 365
+        availabilityScheduleId:
+          type: string
+          format: uuid
+          description: ID of the availability schedule to use (references separate availability API)
+          example: "550e8400-e29b-41d4-a716-446655440001"
+          nullable: true
+
+    EventType:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique event type identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        userId:
+          type: string
+          format: uuid
+          description: ID of the user who owns this event type
+          example: "650e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+          description: Event type title
+          example: "30 Minute Meeting"
+        url:
+          type: string
+          description: URL slug for the event booking page
+          example: "30min"
+        fullUrl:
+          type: string
+          description: Full booking URL
+          example: "https://yourdomain.com/username/30min"
+        description:
+          type: string
+          description: Event type description (markdown)
+          example: "A comprehensive discussion about your project."
+          nullable: true
+        duration:
+          type: integer
+          description: Event duration in minutes
+          example: 30
+        enabled:
+          type: boolean
+          description: Whether this event type is active
+          example: true
+        allowMultipleDurations:
+          type: boolean
+          description: Allow invitees to choose from multiple duration options
+          example: false
+        multipleDurationOptions:
+          type: array
+          description: Available duration options
+          items:
+            type: integer
+          example: [15, 30, 45]
+          nullable: true
+        location:
+          type: string
+          description: Meeting location type
+          example: "Google Meet"
+        customLocation:
+          type: string
+          description: Custom location details
+          example: "123 Main St, Office 5"
+          nullable: true
+        beforeEventBuffer:
+          type: integer
+          description: Buffer time before event in minutes
+          example: 0
+        afterEventBuffer:
+          type: integer
+          description: Buffer time after event in minutes
+          example: 0
+        minimumNotice:
+          type: integer
+          description: Minimum notice required before booking in minutes
+          example: 120
+        timeSlotInterval:
+          type: integer
+          description: Time slot interval in minutes
+          example: 30
+          nullable: true
+        limitBookingFrequency:
+          type: boolean
+          description: Whether booking frequency is limited
+          example: false
+        bookingFrequencyLimit:
+          type: object
+          description: Booking frequency limit settings
+          properties:
+            count:
+              type: integer
+              example: 2
+            period:
+              type: string
+              example: "week"
+          nullable: true
+        onlyFirstSlotPerDay:
+          type: boolean
+          description: Only show first slot per day
+          example: false
+        limitTotalDuration:
+          type: boolean
+          description: Whether total duration is limited
+          example: false
+        totalDurationLimit:
+          type: object
+          description: Total duration limit settings
+          properties:
+            duration:
+              type: integer
+              example: 240
+            period:
+              type: string
+              example: "day"
+          nullable: true
+        limitUpcomingBookings:
+          type: boolean
+          description: Whether upcoming bookings are limited
+          example: false
+        upcomingBookingsLimit:
+          type: integer
+          description: Maximum upcoming bookings per booker
+          example: 1
+          nullable: true
+        limitFutureBookings:
+          type: boolean
+          description: Whether future bookings are limited
+          example: false
+        futureBookingsLimit:
+          type: integer
+          description: Maximum days in the future for bookings
+          example: 60
+          nullable: true
+        availabilityScheduleId:
+          type: string
+          format: uuid
+          description: ID of the availability schedule being used
+          example: "550e8400-e29b-41d4-a716-446655440001"
+          nullable: true
+        bookingCount:
+          type: integer
+          description: Total number of bookings for this event type
+          example: 12
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2025-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2025-01-15T10:30:00Z"
+      required:
+        - id
+        - userId
+        - title
+        - url
+        - fullUrl
+        - duration
+        - enabled
+        - location
+        - createdAt
+        - updatedAt
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type or code
+          example: "NOT_FOUND"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Event type not found"
+        statusCode:
+          type: integer
+          description: HTTP status code
+          example: 404
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2025-01-15T10:30:00Z"
+      required:
+        - error
+        - message
+        - statusCode
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: General validation error message
+          example: "Validation failed"
+        statusCode:
+          type: integer
+          description: HTTP status code
+          example: 422
+        errors:
+          type: array
+          description: Detailed validation errors
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field name that failed validation
+                example: "duration"
+              message:
+                type: string
+                description: Validation error message for this field
+                example: "Duration must be between 5 and 480 minutes"
+              code:
+                type: string
+                description: Validation error code
+                example: "DURATION_OUT_OF_RANGE"
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2025-01-15T10:30:00Z"
+      required:
+        - error
+        - message
+        - statusCode
+        - errors
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token obtained from login
+
+security:
+  - bearerAuth: []

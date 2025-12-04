@@ -1,0 +1,433 @@
+openapi: 3.0.0
+info:
+  title: Authentication API
+  description: API endpoints for user authentication and session management using Laravel Sanctum. User accounts are created by administrators - there is no public registration.
+  version: 1.0.0
+
+servers:
+  - url: https://api.yourapp.com
+    description: Production server
+  - url: http://localhost:3000
+    description: Development server
+
+paths:
+  /api/auth/login:
+    post:
+      summary: Authenticate user and return tokens
+      operationId: loginUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests - rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/logout:
+    post:
+      summary: Logout user and invalidate session
+      operationId: logoutUser
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logout successful"
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/forgot-password:
+    post:
+      summary: Request password reset email
+      operationId: forgotPassword
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '200':
+          description: Password reset email sent (returns success even if email doesn't exist for security)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "If an account exists with this email, a password reset link has been sent"
+        '400':
+          description: Bad request - invalid email format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many requests - rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/reset-password:
+    post:
+      summary: Reset password using reset token
+      operationId: resetPassword
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Password has been reset successfully"
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid or expired reset token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation error - password requirements not met
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/me:
+    get:
+      summary: Get current authenticated user profile
+      operationId: getCurrentUser
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: "john.doe@example.com"
+        password:
+          type: string
+          format: password
+          description: User password
+          example: "SecureP@ssw0rd"
+        rememberMe:
+          type: boolean
+          description: Keep user logged in for extended period
+          default: false
+      required:
+        - email
+        - password
+
+    ForgotPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: "john.doe@example.com"
+      required:
+        - email
+
+    ResetPasswordRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Password reset token from email
+          example: "abc123def456ghi789"
+        newPassword:
+          type: string
+          format: password
+          description: New password (min 8 characters, must include uppercase, lowercase, number, special char)
+          example: "NewSecureP@ssw0rd"
+          minLength: 8
+          maxLength: 128
+      required:
+        - token
+        - newPassword
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        accessToken:
+          type: string
+          description: Sanctum access token for API requests
+          example: "1|abcdef123456..."
+        expiresIn:
+          type: integer
+          description: Access token expiration time in seconds
+          example: 3600
+        tokenType:
+          type: string
+          description: Token type (always "Bearer")
+          example: "Bearer"
+          default: "Bearer"
+      required:
+        - user
+        - accessToken
+        - expiresIn
+        - tokenType
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: "john.doe@example.com"
+        emailVerified:
+          type: boolean
+          description: Whether email has been verified (managed by administrators)
+          example: true
+          default: true
+        firstName:
+          type: string
+          description: User's first name
+          example: "John"
+        lastName:
+          type: string
+          description: User's last name
+          example: "Doe"
+        username:
+          type: string
+          description: Unique username
+          example: "johndoe"
+        avatarUrl:
+          type: string
+          format: uri
+          description: URL to user's avatar image
+          example: "https://example.com/avatars/johndoe.jpg"
+          nullable: true
+        timezone:
+          type: string
+          description: User's timezone (IANA timezone identifier)
+          example: "America/New_York"
+        role:
+          type: string
+          enum: [user, admin, trainer]
+          description: User role
+          example: "user"
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2025-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2025-01-15T10:30:00Z"
+        lastLoginAt:
+          type: string
+          format: date-time
+          description: Last login timestamp
+          example: "2025-01-15T10:30:00Z"
+          nullable: true
+      required:
+        - id
+        - email
+        - emailVerified
+        - firstName
+        - lastName
+        - timezone
+        - role
+        - createdAt
+        - updatedAt
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type or code
+          example: "UNAUTHORIZED"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid credentials"
+        statusCode:
+          type: integer
+          description: HTTP status code
+          example: 401
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2025-01-15T10:30:00Z"
+      required:
+        - error
+        - message
+        - statusCode
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: General validation error message
+          example: "Validation failed"
+        statusCode:
+          type: integer
+          description: HTTP status code
+          example: 422
+        errors:
+          type: array
+          description: Detailed validation errors
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field name that failed validation
+                example: "password"
+              message:
+                type: string
+                description: Validation error message for this field
+                example: "Password must contain at least one uppercase letter"
+              code:
+                type: string
+                description: Validation error code
+                example: "PASSWORD_UPPERCASE_REQUIRED"
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2025-01-15T10:30:00Z"
+      required:
+        - error
+        - message
+        - statusCode
+        - errors
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum
+      description: Sanctum access token obtained from login endpoint
+
+security:
+  - bearerAuth: []
