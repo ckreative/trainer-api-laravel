@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'booking_app' => [
+        'key' => env('BOOKING_APP_KEY'),
+    ],
+
 ];

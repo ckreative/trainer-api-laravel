@@ -23,6 +23,7 @@ class EventTypeResource extends JsonResource
             'description' => $this->description,
             'duration' => $this->duration,
             'enabled' => $this->enabled,
+            'isSystem' => $this->is_system ?? false,
             'allowMultipleDurations' => $this->allow_multiple_durations,
             'multipleDurationOptions' => $this->multiple_duration_options,
             'location' => $this->location,

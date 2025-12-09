@@ -41,6 +41,7 @@ class EventType extends Model
         'limit_future_bookings',
         'future_bookings_limit',
         'availability_schedule_id',
+        'is_system',
     ];
 
     /**
@@ -59,7 +60,26 @@ class EventType extends Model
         'total_duration_limit' => 'array',
         'limit_upcoming_bookings' => 'boolean',
         'limit_future_bookings' => 'boolean',
+        'is_system' => 'boolean',
     ];
+
+    /**
+     * Create the default "Intro Call" event type for a trainer.
+     * This is a system event type that cannot be deleted.
+     */
+    public static function createIntroCallForTrainer(User $trainer): self
+    {
+        return self::create([
+            'user_id' => $trainer->id,
+            'title' => 'Free 15-Min Intro Call',
+            'url' => 'intro-call',
+            'description' => 'A quick introductory call to discuss your goals and see if we\'re a good fit.',
+            'duration' => 15,
+            'enabled' => true,
+            'is_system' => true,
+            'location' => 'google_meet',
+        ]);
+    }
 
     /**
      * Get the user that owns the event type.

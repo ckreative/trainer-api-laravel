@@ -24,6 +24,7 @@ class Booking extends Model
         'status',
         'attendee_name',
         'attendee_email',
+        'attendee_phone',
         'location',
         'meeting_url',
         'notes',

@@ -3,7 +3,10 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AvailabilitySchedulesController;
 use App\Http\Controllers\BookingsController;
+use App\Http\Controllers\BrandingController;
 use App\Http\Controllers\EventTypesController;
+use App\Http\Controllers\PublicBookingController;
+use App\Http\Controllers\PublicTrainerController;
 use Illuminate\Support\Facades\Route;
 
 // Authentication routes
@@ -102,4 +105,32 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Cancel a booking (soft action)
     Route::patch('/bookings/{id}/cancel', [BookingsController::class, 'cancel']);
+});
+
+// ============================================
+// Branding API Routes (Dashboard App)
+// ============================================
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Get branding settings for authenticated user
+    Route::get('/branding', [BrandingController::class, 'show']);
+
+    // Update branding settings
+    Route::put('/branding', [BrandingController::class, 'update']);
+});
+
+// ============================================
+// Public API Routes (Booking App)
+// Authenticated via X-App-Key header
+// ============================================
+
+Route::middleware('app.key')->prefix('public')->group(function () {
+    // Get trainer public profile by handle
+    Route::get('/trainers/{handle}', [PublicTrainerController::class, 'show']);
+
+    // Get trainer's available event types
+    Route::get('/trainers/{handle}/event-types', [PublicTrainerController::class, 'eventTypes']);
+
+    // Create a booking for a trainer
+    Route::post('/trainers/{handle}/bookings', [PublicBookingController::class, 'store']);
 });

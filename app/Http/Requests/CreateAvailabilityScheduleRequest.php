@@ -28,7 +28,7 @@ class CreateAvailabilityScheduleRequest extends FormRequest
             'schedule' => ['required', 'array', 'min:7', 'max:7'],
             'schedule.*.day' => ['required', 'string', 'in:Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday'],
             'schedule.*.enabled' => ['required', 'boolean'],
-            'schedule.*.slots' => ['required', 'array'],
+            'schedule.*.slots' => ['present', 'array'],
             'schedule.*.slots.*.start' => ['required', 'string', 'regex:/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/'],
             'schedule.*.slots.*.end' => ['required', 'string', 'regex:/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/'],
         ];

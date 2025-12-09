@@ -281,6 +281,16 @@ class EventTypesController extends Controller
                 ], 404);
             }
 
+            // Prevent deletion of system event types (like Intro Call)
+            if ($eventType->is_system) {
+                return response()->json([
+                    'error' => 'FORBIDDEN',
+                    'message' => 'System event types cannot be deleted. You can disable it instead.',
+                    'statusCode' => 403,
+                    'timestamp' => now()->toIso8601String(),
+                ], 403);
+            }
+
             // Check if event type has existing bookings
             // Assuming a relationship exists: bookings()
             if (method_exists($eventType, 'bookings') && $eventType->bookings()->count() > 0) {
