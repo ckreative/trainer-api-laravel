@@ -19,13 +19,18 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
+    'allowed_origins' => array_filter([
+        // Local development
         'http://localhost:5174',
         'http://localhost:5173',
         'http://localhost:3000',
         'http://localhost:3001',
         'http://localhost:3005',
-    ],
+        // Production (set in .env)
+        env('DASHBOARD_URL'),
+        env('BOOKING_URL'),
+        env('ADMIN_URL'),
+    ]),
 
     'allowed_origins_patterns' => [],
 
