@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\TrainerController;
+use App\Http\Controllers\Admin\TrainerInvitationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AvailabilitySchedulesController;
 use App\Http\Controllers\BookingsController;
 use App\Http\Controllers\BrandingController;
 use App\Http\Controllers\EventTypesController;
+use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\PublicBookingController;
 use App\Http\Controllers\PublicTrainerController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +25,7 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/change-password', [AuthController::class, 'changePassword']);
     });
 });
 
@@ -133,4 +137,33 @@ Route::middleware('app.key')->prefix('public')->group(function () {
 
     // Create a booking for a trainer
     Route::post('/trainers/{handle}/bookings', [PublicBookingController::class, 'store']);
+});
+
+// ============================================
+// Public Invitation Routes (Account Setup)
+// ============================================
+
+Route::prefix('invitations')->group(function () {
+    // Validate invitation token
+    Route::get('/{token}', [InvitationController::class, 'show']);
+
+    // Accept invitation and create account
+    Route::post('/{token}/accept', [InvitationController::class, 'accept']);
+});
+
+// ============================================
+// Admin API Routes
+// Protected by auth:sanctum + admin middleware
+// ============================================
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    // Trainers management
+    Route::get('/trainers', [TrainerController::class, 'index']);
+    Route::get('/trainers/{id}', [TrainerController::class, 'show']);
+
+    // Trainer invitations
+    Route::get('/invitations', [TrainerInvitationController::class, 'index']);
+    Route::post('/invitations', [TrainerInvitationController::class, 'store']);
+    Route::delete('/invitations/{id}', [TrainerInvitationController::class, 'destroy']);
+    Route::post('/invitations/{id}/resend', [TrainerInvitationController::class, 'resend']);
 });

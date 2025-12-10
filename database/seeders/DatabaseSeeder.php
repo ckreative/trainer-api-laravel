@@ -2,12 +2,14 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Role;
 use App\Models\AvailabilitySchedule;
 use App\Models\Booking;
 use App\Models\EventType;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,13 +18,119 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create test user
-        $user = User::factory()->create([
-            'username' => 'testuser',
-            'email' => 'test@example.com',
-            'first_name' => 'Test',
-            'last_name' => 'User',
-        ]);
+        // ============================================
+        // PRODUCTION-SAFE ACCOUNTS (run in all environments)
+        // Use firstOrCreate so seeder can be run multiple times
+        // ============================================
+
+        // Super Admin account
+        User::firstOrCreate(
+            ['email' => 'admin@darrell.anonaddy.com'],
+            [
+                'username' => 'superadmin',
+                'first_name' => 'Super',
+                'last_name' => 'Admin',
+                'role' => Role::ADMIN,
+                'password' => Hash::make('ChangeMe123!'),
+                'force_password_change' => true,
+            ]
+        );
+
+        // Demo Admin account (simple credentials for stakeholder demos)
+        User::firstOrCreate(
+            ['email' => 'admin@trainer.com'],
+            [
+                'username' => 'demoadmin',
+                'first_name' => 'Demo',
+                'last_name' => 'Admin',
+                'role' => Role::ADMIN,
+                'password' => Hash::make('password'),
+                'force_password_change' => true,
+            ]
+        );
+
+        // Demo Trainer account (also serves as test trainer)
+        // First, update any existing test@example.com user to have proper role
+        $existingTestUser = User::where('email', 'test@example.com')->first();
+        if ($existingTestUser) {
+            $existingTestUser->update(['role' => Role::TRAINER, 'handle' => 'testuser']);
+        }
+
+        // Simple demo trainer with easy-to-remember handle
+        $demoTrainer = User::firstOrCreate(
+            ['email' => 'demo@trainer.com'],
+            [
+                'username' => 'demo',
+                'first_name' => 'Demo',
+                'last_name' => 'Trainer',
+                'role' => Role::TRAINER,
+                'handle' => 'demo',
+                'brand_name' => 'Demo Fitness',
+                'primary_color' => '#10B981',
+                'password' => Hash::make('password'),
+                'force_password_change' => true,
+            ]
+        );
+
+        // Ensure demo trainer has availability and event types
+        if (! AvailabilitySchedule::where('user_id', $demoTrainer->id)->exists()) {
+            $demoSchedule = AvailabilitySchedule::create([
+                'user_id' => $demoTrainer->id,
+                'name' => 'Working Hours',
+                'is_default' => true,
+                'timezone' => 'America/New_York',
+                'schedule' => [
+                    ['day' => 'Monday', 'enabled' => true, 'slots' => [['start' => '09:00', 'end' => '17:00']]],
+                    ['day' => 'Tuesday', 'enabled' => true, 'slots' => [['start' => '09:00', 'end' => '17:00']]],
+                    ['day' => 'Wednesday', 'enabled' => true, 'slots' => [['start' => '09:00', 'end' => '17:00']]],
+                    ['day' => 'Thursday', 'enabled' => true, 'slots' => [['start' => '09:00', 'end' => '17:00']]],
+                    ['day' => 'Friday', 'enabled' => true, 'slots' => [['start' => '09:00', 'end' => '17:00']]],
+                    ['day' => 'Saturday', 'enabled' => false, 'slots' => []],
+                    ['day' => 'Sunday', 'enabled' => false, 'slots' => []],
+                ],
+            ]);
+
+            EventType::create([
+                'user_id' => $demoTrainer->id,
+                'title' => 'Free 15-Min Intro Call',
+                'url' => 'intro',
+                'description' => 'A quick intro call to discuss your fitness goals.',
+                'duration' => 15,
+                'enabled' => true,
+                'location' => 'google_meet',
+                'availability_schedule_id' => $demoSchedule->id,
+            ]);
+
+            EventType::create([
+                'user_id' => $demoTrainer->id,
+                'title' => '1-on-1 Training Session',
+                'url' => 'training',
+                'description' => 'A 60-minute personal training session.',
+                'duration' => 60,
+                'enabled' => true,
+                'location' => 'in_person',
+                'availability_schedule_id' => $demoSchedule->id,
+            ]);
+        }
+
+        $user = User::firstOrCreate(
+            ['email' => 'trainer@darrell.anonaddy.com'],
+            [
+                'username' => 'demotrainer',
+                'first_name' => 'Demo',
+                'last_name' => 'Trainer',
+                'role' => Role::TRAINER,
+                'handle' => 'demotrainer', // Use unique handle
+                'brand_name' => 'Demo Trainer',
+                'password' => Hash::make('ChangeMe123!'),
+                'force_password_change' => true,
+            ]
+        );
+
+        // Skip the rest of seeding if trainer already has data (re-running seeder)
+        if (AvailabilitySchedule::where('user_id', $user->id)->exists()) {
+            return;
+        }
 
         // Create availability schedule
         $availabilitySchedule = AvailabilitySchedule::create([

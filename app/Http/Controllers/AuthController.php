@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Role;
 use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\ResetPasswordRequest;
@@ -32,6 +33,25 @@ class AuthController extends Controller
                 'statusCode' => 401,
                 'timestamp' => now()->toIso8601String(),
             ], 401);
+        }
+
+        // Validate role based on which app is logging in
+        $app = $request->validated('app');
+        if ($app) {
+            $allowedRoles = match ($app) {
+                'dashboard' => [Role::TRAINER],
+                'admin' => [Role::ADMIN],
+                default => [Role::USER, Role::TRAINER, Role::ADMIN],
+            };
+
+            if (! in_array($user->role, $allowedRoles)) {
+                return response()->json([
+                    'error' => 'FORBIDDEN',
+                    'message' => 'You do not have permission to access this application',
+                    'statusCode' => 403,
+                    'timestamp' => now()->toIso8601String(),
+                ], 403);
+            }
         }
 
         // Update last login timestamp
@@ -122,6 +142,42 @@ class AuthController extends Controller
             'statusCode' => 401,
             'timestamp' => now()->toIso8601String(),
         ], 401);
+    }
+
+    /**
+     * Change password for authenticated user
+     * Also clears force_password_change flag if set
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'currentPassword' => 'required|string',
+            'newPassword' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        // Verify current password
+        if (! Hash::check($request->input('currentPassword'), $user->password)) {
+            return response()->json([
+                'error' => 'UNAUTHORIZED',
+                'message' => 'Current password is incorrect',
+                'statusCode' => 401,
+                'timestamp' => now()->toIso8601String(),
+            ], 401);
+        }
+
+        // Update password and clear force_password_change flag
+        $user->forceFill([
+            'password' => Hash::make($request->input('newPassword')),
+            'force_password_change' => false,
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        return response()->json([
+            'message' => 'Password changed successfully',
+            'user' => new UserResource($user),
+        ]);
     }
 }
 

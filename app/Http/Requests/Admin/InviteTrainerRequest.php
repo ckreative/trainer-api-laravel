@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class LoginRequest extends FormRequest
+class InviteTrainerRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,10 +22,16 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email', 'max:255'],
-            'password' => ['required', 'string'],
-            'rememberMe' => ['sometimes', 'boolean'],
-            'app' => ['sometimes', 'string', 'in:dashboard,admin'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                'unique:users,email',
+                'unique:trainer_invitations,email,NULL,id,accepted_at,NULL',
+            ],
+            'firstName' => ['required', 'string', 'max:100'],
+            'lastName' => ['required', 'string', 'max:100'],
         ];
     }
 
@@ -39,7 +45,9 @@ class LoginRequest extends FormRequest
         return [
             'email.required' => 'Email address is required',
             'email.email' => 'Please provide a valid email address',
-            'password.required' => 'Password is required',
+            'email.unique' => 'This email is already registered or has a pending invitation',
+            'firstName.required' => 'First name is required',
+            'lastName.required' => 'Last name is required',
         ];
     }
 }

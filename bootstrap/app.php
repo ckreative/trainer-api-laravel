@@ -16,10 +16,20 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'app.key' => \App\Http\Middleware\ValidateAppKey::class,
+            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
         ]);
 
         // Ensure API requests always expect JSON
         $middleware->statefulApi();
+
+        // Exclude public API endpoints from CSRF validation
+        $middleware->validateCsrfTokens(except: [
+            'api/invitations/*',
+            'api/auth/login',
+            'api/auth/forgot-password',
+            'api/auth/reset-password',
+            'api/public/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Return JSON for unauthenticated API requests instead of redirecting

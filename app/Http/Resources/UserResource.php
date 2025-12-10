@@ -25,6 +25,7 @@ class UserResource extends JsonResource
             'avatarUrl' => $this->avatar_url,
             'timezone' => $this->timezone,
             'role' => $this->role->value,
+            'forcePasswordChange' => $this->force_password_change ?? false,
             'createdAt' => $this->created_at?->toIso8601String(),
             'updatedAt' => $this->updated_at?->toIso8601String(),
             'lastLoginAt' => $this->last_login_at?->toIso8601String(),
