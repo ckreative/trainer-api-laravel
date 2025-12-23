@@ -27,6 +27,8 @@ return [
         'http://localhost:3001',
         'http://localhost:3002',
         'http://localhost:3005',
+        'http://localhost:3006',
+        'http://localhost:3007',
         // Production (set in .env)
         env('DASHBOARD_URL'),
         env('BOOKING_URL'),

@@ -21,6 +21,7 @@ class AvailabilityScheduleResource extends JsonResource
             'isDefault' => $this->is_default,
             'timezone' => $this->timezone,
             'schedule' => $this->schedule,
+            'dateOverrides' => $this->date_overrides ?? [],
             'eventTypeCount' => $this->whenLoaded('eventTypes', function () {
                 return $this->eventTypes->count();
             }, 0),

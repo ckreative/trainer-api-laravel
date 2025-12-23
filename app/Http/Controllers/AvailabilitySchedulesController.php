@@ -157,6 +157,7 @@ class AvailabilitySchedulesController extends Controller
                 'is_default' => $validated['isDefault'] ?? $schedule->is_default,
                 'timezone' => $validated['timezone'] ?? $schedule->timezone,
                 'schedule' => $validated['schedule'] ?? $schedule->schedule,
+                'date_overrides' => $validated['dateOverrides'] ?? $schedule->date_overrides,
             ]);
 
             return response()->json(

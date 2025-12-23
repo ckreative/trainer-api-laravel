@@ -135,6 +135,9 @@ Route::middleware('app.key')->prefix('public')->group(function () {
     // Get trainer's available event types
     Route::get('/trainers/{handle}/event-types', [PublicTrainerController::class, 'eventTypes']);
 
+    // Get available time slots for booking
+    Route::get('/trainers/{handle}/event-types/{eventTypeId}/available-slots', [PublicBookingController::class, 'availableSlots']);
+
     // Create a booking for a trainer
     Route::post('/trainers/{handle}/bookings', [PublicBookingController::class, 'store']);
 });

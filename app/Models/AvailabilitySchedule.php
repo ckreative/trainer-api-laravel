@@ -21,6 +21,7 @@ class AvailabilitySchedule extends Model
         'is_default',
         'timezone',
         'schedule',
+        'date_overrides',
     ];
 
     /**
@@ -31,6 +32,7 @@ class AvailabilitySchedule extends Model
     protected $casts = [
         'is_default' => 'boolean',
         'schedule' => 'array',
+        'date_overrides' => 'array',
     ];
 
     /**

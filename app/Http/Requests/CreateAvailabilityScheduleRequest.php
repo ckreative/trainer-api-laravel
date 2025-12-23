@@ -74,4 +74,26 @@ class CreateAvailabilityScheduleRequest extends FormRequest
             ]);
         }
     }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $schedule = $this->input('schedule', []);
+            foreach ($schedule as $dayIndex => $day) {
+                if (!empty($day['slots'])) {
+                    foreach ($day['slots'] as $slotIndex => $slot) {
+                        if (isset($slot['start'], $slot['end']) && $slot['start'] >= $slot['end']) {
+                            $validator->errors()->add(
+                                "schedule.{$dayIndex}.slots.{$slotIndex}",
+                                "End time must be after start time for {$day['day']}"
+                            );
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
