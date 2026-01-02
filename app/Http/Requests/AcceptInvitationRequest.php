@@ -23,6 +23,8 @@ class AcceptInvitationRequest extends FormRequest
     {
         return [
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'firstName' => ['nullable', 'string', 'max:100'],
+            'lastName' => ['nullable', 'string', 'max:100'],
         ];
     }
 

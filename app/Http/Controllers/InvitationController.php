@@ -71,12 +71,16 @@ class InvitationController extends Controller
 
         // Create the trainer account in a transaction
         $user = DB::transaction(function () use ($invitation, $request) {
+            // Use request name if provided, otherwise use invitation name
+            $firstName = $request->validated('firstName') ?? $invitation->first_name;
+            $lastName = $request->validated('lastName') ?? $invitation->last_name;
+
             // Create the user
             $user = User::create([
                 'email' => $invitation->email,
-                'first_name' => $invitation->first_name,
-                'last_name' => $invitation->last_name,
-                'username' => Str::slug($invitation->first_name.'-'.$invitation->last_name).'-'.Str::random(4),
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'username' => Str::slug($firstName.'-'.$lastName).'-'.Str::random(4),
                 'password' => Hash::make($request->validated('password')),
                 'role' => Role::TRAINER,
                 'email_verified' => true,
