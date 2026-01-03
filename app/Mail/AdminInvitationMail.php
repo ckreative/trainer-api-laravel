@@ -2,14 +2,14 @@
 
 namespace App\Mail;
 
-use App\Models\TrainerInvitation;
+use App\Models\AdminInvitation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class TrainerInvitationMail extends Mailable
+class AdminInvitationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -17,7 +17,7 @@ class TrainerInvitationMail extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        public TrainerInvitation $invitation
+        public AdminInvitation $invitation
     ) {}
 
     /**
@@ -26,7 +26,7 @@ class TrainerInvitationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "You're invited to join as a Trainer",
+            subject: "You're invited to join as an Administrator",
         );
     }
 
@@ -35,11 +35,11 @@ class TrainerInvitationMail extends Mailable
      */
     public function content(): Content
     {
-        $trainerUrl = config('app.trainer_url', 'http://localhost:3005');
-        $setupUrl = $trainerUrl.'/setup/'.$this->invitation->token;
+        $adminUrl = config('app.admin_url', 'http://localhost:3007');
+        $setupUrl = $adminUrl.'/setup/'.$this->invitation->token;
 
         return new Content(
-            view: 'emails.trainer-invitation',
+            view: 'emails.admin-invitation',
             with: [
                 'firstName' => $this->invitation->first_name,
                 'setupUrl' => $setupUrl,

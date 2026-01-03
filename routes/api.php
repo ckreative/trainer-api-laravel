@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminInvitationController;
 use App\Http\Controllers\Admin\TrainerController;
 use App\Http\Controllers\Admin\TrainerInvitationController;
+use App\Http\Controllers\AdminSetupController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AvailabilitySchedulesController;
 use App\Http\Controllers\BookingsController;
@@ -169,4 +171,22 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/invitations', [TrainerInvitationController::class, 'store']);
     Route::delete('/invitations/{id}', [TrainerInvitationController::class, 'destroy']);
     Route::post('/invitations/{id}/resend', [TrainerInvitationController::class, 'resend']);
+
+    // Admin users and invitations management
+    Route::get('/users', [AdminInvitationController::class, 'index']);
+    Route::post('/users/invite', [AdminInvitationController::class, 'store']);
+    Route::delete('/users/invitations/{id}', [AdminInvitationController::class, 'destroy']);
+    Route::post('/users/invitations/{id}/resend', [AdminInvitationController::class, 'resend']);
+});
+
+// ============================================
+// Public Admin Invitation Routes (Account Setup)
+// ============================================
+
+Route::prefix('admin-invitations')->group(function () {
+    // Validate admin invitation token
+    Route::get('/{token}', [AdminSetupController::class, 'show']);
+
+    // Accept admin invitation and create account
+    Route::post('/{token}/accept', [AdminSetupController::class, 'accept']);
 });

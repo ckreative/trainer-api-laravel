@@ -123,4 +123,16 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Frontend App URLs
+    |--------------------------------------------------------------------------
+    |
+    | URLs for the frontend applications used in invitation emails.
+    |
+    */
+
+    'trainer_url' => env('APP_TRAINER_URL', 'http://localhost:3005'),
+    'admin_url' => env('APP_ADMIN_URL', 'http://localhost:3007'),
+
 ];
